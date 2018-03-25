@@ -28,6 +28,7 @@ var FixtureReferencingResource = Resource{
 	ID:         fixtureReferencingID,
 	Data:       fixtureReferencingData,
 	References: fixtureReferences,
+	entity:     fixtureReferencingEntity,
 }
 
 var fixtureReferencingID = "1"
@@ -37,12 +38,13 @@ var fixtureReferencingData = FixtureDataType{
 }
 
 var fixtureReferences = map[string][]Resource{
-	"reference": {fixtureReferencedResource},
+	"reference": {FixtureReferencedResource},
 }
 
-var fixtureReferencedResource = Resource{
-	ID:   fixtureReferencedID,
-	Data: fixtureReferencedData,
+var FixtureReferencedResource = Resource{
+	ID:     fixtureReferencedID,
+	Data:   fixtureReferencedData,
+	entity: fixtureReferencedEntity,
 }
 
 var fixtureReferencingEntityName = "referencingEntity"

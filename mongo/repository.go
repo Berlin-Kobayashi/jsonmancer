@@ -31,7 +31,7 @@ func (s Repository) Create(collectionName string, data interface{}) error {
 	return nil
 }
 
-func (s Repository) Read(collectionName, id string, result *interface{}) error {
+func (s Repository) Read(collectionName, id string, result interface{}) error {
 	q := s.database.C(collectionName).Find(bson.M{"_id": id})
 
 	n, err := q.Count()
@@ -43,7 +43,7 @@ func (s Repository) Read(collectionName, id string, result *interface{}) error {
 		return storage.NotFound{Entity: collectionName, ID: id}
 	}
 
-	err = q.One(&result)
+	err = q.One(result)
 	if err != nil {
 		return storage.DBError{Message: err.Error()}
 	}
@@ -69,7 +69,7 @@ func (s Repository) Delete(collectionName, id string) error {
 	return nil
 }
 
-func (s Repository) ReadAll(collectionName string, query storage.Query, result *[]interface{}) error {
+func (s Repository) ReadAll(collectionName string, query storage.Query, result interface{}) error {
 	mq := createMongoQuery(query)
 	q := s.database.C(collectionName).Find(mq)
 

@@ -21,16 +21,16 @@ func (s dummyRepository) Create(collectionName string, data interface{}) error {
 	return nil
 }
 
-func (s dummyRepository) Read(collectionName string, id string, result *interface{}) error {
+func (s dummyRepository) Read(collectionName string, id string, result interface{}) error {
 	if id == missingIDFixture {
 		return NotFound{}
 	}
 
 	switch collectionName {
 	case fixtureReferencingEntityName:
-		*result = FixtureReferencingResource.Collapse()
+		*result.(*interface{}) = FixtureReferencingResource.Collapse()
 	case fixtureReferencedEntityName:
-		*result = fixtureReferencedResource.Collapse()
+		*result.(*interface{}) = FixtureReferencedResource.Collapse()
 	default:
 		return NotFound{}
 	}
@@ -54,7 +54,7 @@ func (s dummyRepository) Delete(collectionName string, id string) error {
 	return nil
 }
 
-func (s dummyRepository) ReadAll(collectionName string, query Query, result *[]interface{}) error {
+func (s dummyRepository) ReadAll(collectionName string, query Query, result interface{}) error {
 	queriedData = query
 
 	var data interface{}
@@ -64,7 +64,7 @@ func (s dummyRepository) ReadAll(collectionName string, query Query, result *[]i
 		return err
 	}
 
-	*result = []interface{}{data}
+	*result.(*interface{}) = []interface{}{data}
 
 	return nil
 }

@@ -63,8 +63,12 @@ func getReferencedBy(entities map[string]Entity) (map[string][]string, error) {
 }
 
 func (s *Storage) Create(entityName, jsonDocument string) (CollapsedResource, error) {
-	// TODO assert references exist before creating
 	resource, err := s.createCollapsedResource(entityName, jsonDocument)
+	if err != nil {
+		return CollapsedResource{}, err
+	}
+
+	_, err = resource.Expand(s.repository)
 	if err != nil {
 		return CollapsedResource{}, err
 	}
