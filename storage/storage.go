@@ -7,7 +7,7 @@ import (
 
 type Storage struct {
 	entities     map[string]Entity
-	referencedBy map[string][]string
+	referencedBy map[string]map[string][]string
 	repository   Repository
 	idGenerator  IDGenerator
 }
@@ -43,10 +43,10 @@ func mapEntities(entityDefinition []Entity) (map[string]Entity, error) {
 	return entityMap, nil
 }
 
-func getReferencedBy(entities map[string]Entity) (map[string][]string, error) {
-	referenceBy := make(map[string][]string, len(entities))
+func getReferencedBy(entities map[string]Entity) (map[string]map[string][]string, error) {
+	referenceBy := make(map[string]map[string][]string, len(entities))
 	for name := range entities {
-		referenceBy[name] = []string{}
+		referenceBy[name] = map[string][]string{}
 	}
 
 	for entityName, entity := range entities {
@@ -55,7 +55,11 @@ func getReferencedBy(entities map[string]Entity) (map[string][]string, error) {
 				return nil, fmt.Errorf("entitiy %q is referenced but unknown", reference.Name)
 			}
 
-			referenceBy[entityName] = append(referenceBy[entityName], relationName)
+			if _, ok := referenceBy[entityName][reference.Name]; !ok {
+				referenceBy[reference.Name][entityName] = []string{}
+			}
+
+			referenceBy[reference.Name][entityName] = append(referenceBy[reference.Name][entityName], relationName)
 		}
 	}
 
