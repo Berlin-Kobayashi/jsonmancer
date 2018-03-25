@@ -1,0 +1,15 @@
+version: "3.3"
+
+services:
+  app:
+    image: golang:1.10
+    working_dir: /go/src/github.com/DanShu93/jsonmancer
+    volumes:
+      - ./../../../:/go/src/
+    command: bash -c "cd /go/src/github.com/DanShu93/jsonmancer && go get ./... && go run /go/src/github.com/DanShu93/jsonmancer/cmd/server/server.go"
+    ports:
+      - 8888:80
+  db:
+    image: mongo:3.6
+    ports:
+      - 27017:27017
