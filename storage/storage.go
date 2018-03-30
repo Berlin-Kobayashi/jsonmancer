@@ -72,7 +72,7 @@ func (s *Storage) Create(entityName, jsonDocument string) (CollapsedResource, er
 		return CollapsedResource{}, err
 	}
 
-	_, err = resource.Expand(s.repository)
+	_, err = s.Expand(resource)
 	if err != nil {
 		return CollapsedResource{}, err
 	}
@@ -82,6 +82,53 @@ func (s *Storage) Create(entityName, jsonDocument string) (CollapsedResource, er
 	err = s.repository.Create(entityName, resource)
 	if err != nil {
 		return CollapsedResource{}, err
+	}
+
+	return resource, nil
+}
+
+func (s *Storage) Read(entityName, id string) (CollapsedResource, error) {
+	entity, ok := s.entities[entityName]
+	if !ok {
+		return CollapsedResource{}, UndefinedEntity{entityName}
+	}
+
+	result := entity.New().Collapse()
+
+	err := s.repository.Read(entity.Name, id, &result)
+	if err != nil {
+		return CollapsedResource{}, err
+	}
+
+	result.entity = entity
+
+	return result, nil
+}
+
+func (s *Storage) Expand(collapsedResource CollapsedResource) (Resource, error) {
+	resource := Resource{}
+	resource.ID = collapsedResource.ID
+	resource.Data = collapsedResource.Data
+	resource.entity = collapsedResource.entity
+	resource.References = make(map[string][]Resource, len(collapsedResource.References))
+
+	for relationName, references := range collapsedResource.References {
+		referenceEntity := collapsedResource.entity.References[relationName]
+
+		resource.References[relationName] = make([]Resource, len(references))
+		for i, reference := range references {
+			result, err := s.Read(referenceEntity.Name, reference)
+			if err != nil {
+				return Resource{}, err
+			}
+
+			referencedResource, err := s.Expand(result)
+			if err != nil {
+				return Resource{}, err
+			}
+
+			resource.References[relationName][i] = referencedResource
+		}
 	}
 
 	return resource, nil

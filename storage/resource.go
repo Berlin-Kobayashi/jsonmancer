@@ -24,19 +24,6 @@ func (e Entity) New() Resource {
 	return Resource{Data: data, References: references, entity: e}
 }
 
-func (e Entity) Read(repository Repository, id string) (CollapsedResource, error) {
-	result := e.New().Collapse()
-
-	err := repository.Read(e.Name, id, &result)
-	if err != nil {
-		return CollapsedResource{}, err
-	}
-
-	result.entity = e
-
-	return result, nil
-}
-
 type Resource struct {
 	ID         string
 	Data       interface{}
@@ -71,33 +58,4 @@ func (r Resource) Collapse() CollapsedResource {
 	result.entity = r.entity
 
 	return result
-}
-
-func (r *CollapsedResource) Expand(repository Repository) (Resource, error) {
-	resource := Resource{}
-	resource.ID = r.ID
-	resource.Data = r.Data
-	resource.entity = r.entity
-	resource.References = make(map[string][]Resource, len(r.References))
-
-	for relationName, references := range r.References {
-		referenceEntity := r.entity.References[relationName]
-
-		resource.References[relationName] = make([]Resource, len(references))
-		for i, reference := range references {
-			result, err := referenceEntity.Read(repository, reference)
-			if err != nil {
-				return Resource{}, err
-			}
-
-			referencedResource, err := result.Expand(repository)
-			if err != nil {
-				return Resource{}, err
-			}
-
-			resource.References[relationName][i] = referencedResource
-		}
-	}
-
-	return resource, nil
 }
