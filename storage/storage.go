@@ -87,6 +87,25 @@ func (s *Storage) CreateFromJSON(entityName, jsonDocument string) (CollapsedReso
 	return resource, nil
 }
 
+func (s *Storage) UpdateFromJSON(entityName, jsonDocument string) (CollapsedResource, error) {
+	resource, err := s.createCollapsedResourceFromJSON(entityName, jsonDocument)
+	if err != nil {
+		return CollapsedResource{}, err
+	}
+
+	_, err = s.Expand(resource)
+	if err != nil {
+		return CollapsedResource{}, err
+	}
+
+	err = s.Update(resource)
+	if err != nil {
+		return CollapsedResource{}, err
+	}
+
+	return resource, nil
+}
+
 func (s *Storage) Update(collapsedResource CollapsedResource) error {
 	return s.repository.Update(collapsedResource.entity.Name, collapsedResource.ID, collapsedResource)
 }
