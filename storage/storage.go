@@ -66,7 +66,7 @@ func getReferencedBy(entities map[string]Entity) (map[string]map[string][]string
 	return referenceBy, nil
 }
 
-func (s *Storage) Create(entityName, jsonDocument string) (CollapsedResource, error) {
+func (s *Storage) CreateFromJSON(entityName, jsonDocument string) (CollapsedResource, error) {
 	resource, err := s.createCollapsedResource(entityName, jsonDocument)
 	if err != nil {
 		return CollapsedResource{}, err
@@ -85,6 +85,10 @@ func (s *Storage) Create(entityName, jsonDocument string) (CollapsedResource, er
 	}
 
 	return resource, nil
+}
+
+func (s *Storage) Update(collapsedResource CollapsedResource) error {
+	return s.repository.Update(collapsedResource.entity.Name, collapsedResource.ID, collapsedResource)
 }
 
 func (s *Storage) ReadAndExpand(entityName, id string) (Resource, error) {
@@ -186,9 +190,38 @@ func (s *Storage) createReferencedByMap(entityName string) (map[string]map[strin
 	return result, nil
 }
 
-// TODO implement
+// TODO reduce the amount of DB operations
 // Deletes the resource and all references to it.
 func (s *Storage) Purge(entityName, id string) error {
+	referencedBy, err := s.GetReferencedBy(entityName, id)
+	if err != nil {
+		return err
+	}
+
+	for referencingEntityName, references := range referencedBy {
+		for relationName, referenceIDs := range references {
+			for _, referenceID := range referenceIDs {
+				reference, err := s.Read(referencingEntityName, referenceID)
+				if err != nil {
+					return err
+				}
+
+				newReferences := []string{}
+				for _, v := range reference.References[relationName] {
+					if v != id {
+						newReferences = append(newReferences, v)
+					}
+				}
+
+				reference.References[relationName] = newReferences
+				err = s.Update(reference)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return s.repository.Delete(entityName, id)
 }
 
