@@ -87,6 +87,15 @@ func (s *Storage) Create(entityName, jsonDocument string) (CollapsedResource, er
 	return resource, nil
 }
 
+func (s *Storage) ReadAndExpand(entityName, id string) (Resource, error) {
+	collapsedResource, err := s.Read(entityName, id)
+	if err != nil {
+		return Resource{}, err
+	}
+
+	return s.Expand(collapsedResource)
+}
+
 func (s *Storage) Read(entityName, id string) (CollapsedResource, error) {
 	entity, ok := s.entities[entityName]
 	if !ok {
