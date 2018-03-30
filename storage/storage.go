@@ -186,6 +186,16 @@ func (s *Storage) createReferencedByMap(entityName string) (map[string]map[strin
 	return result, nil
 }
 
+// TODO implement
+// Deletes the resource and all references to it.
+func (s *Storage) Purge(entityName, id string) error {
+	return s.repository.Delete(entityName, id)
+}
+
+func (s *Storage) Delete(entityName, id string) error {
+	return s.repository.Delete(entityName, id)
+}
+
 func (s *Storage) createCollapsedResource(entityName, jsonDocument string) (CollapsedResource, error) {
 	entity, ok := s.entities[entityName]
 	if !ok {
