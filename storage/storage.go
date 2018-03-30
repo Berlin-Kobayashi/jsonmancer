@@ -143,6 +143,49 @@ func (s *Storage) Expand(collapsedResource CollapsedResource) (Resource, error) 
 	return resource, nil
 }
 
+func (s *Storage) GetReferencedBy(entityName, id string) (map[string]map[string][]string, error) {
+	referencedBy, err := s.createReferencedByMap(entityName)
+	if err != nil {
+		return nil, err
+	}
+
+	for referencingEntityName, references := range referencedBy {
+		for relationName := range references {
+			query := Query{Q: make(map[string]FieldQuery, len(references))}
+			query.Q["references."+relationName] = FieldQuery{Kind: QueryContains, Values: []interface{}{id}}
+			result := []CollapsedResource{}
+			err = s.repository.ReadAll(referencingEntityName, query, &result)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, row := range result {
+				referencedBy[referencingEntityName][relationName] = append(referencedBy[referencingEntityName][relationName], row.ID)
+			}
+		}
+	}
+
+	return referencedBy, nil
+}
+
+func (s *Storage) createReferencedByMap(entityName string) (map[string]map[string][]string, error) {
+	references, ok := s.referencedBy[entityName]
+	if !ok {
+		return nil, UndefinedEntity{entityName}
+	}
+
+	result := make(map[string]map[string][]string, len(references))
+
+	for k, v := range references {
+		result[k] = make(map[string][]string, len(v))
+		for _, relationName := range v {
+			result[k][relationName] = []string{}
+		}
+	}
+
+	return result, nil
+}
+
 func (s *Storage) createCollapsedResource(entityName, jsonDocument string) (CollapsedResource, error) {
 	entity, ok := s.entities[entityName]
 	if !ok {
