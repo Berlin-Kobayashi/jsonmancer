@@ -67,7 +67,7 @@ func getReferencedBy(entities map[string]Entity) (map[string]map[string][]string
 }
 
 func (s *Storage) CreateFromJSON(entityName, jsonDocument string) (CollapsedResource, error) {
-	resource, err := s.createCollapsedResource(entityName, jsonDocument)
+	resource, err := s.createCollapsedResourceFromJSON(entityName, jsonDocument)
 	if err != nil {
 		return CollapsedResource{}, err
 	}
@@ -114,6 +114,21 @@ func (s *Storage) Read(entityName, id string) (CollapsedResource, error) {
 	}
 
 	result.entity = entity
+
+	return result, nil
+}
+
+func (s *Storage) ReadAll(entityName string, query Query) ([]CollapsedResource, error) {
+	entity, ok := s.entities[entityName]
+	if !ok {
+		return nil, UndefinedEntity{entityName}
+	}
+
+	result := []CollapsedResource{}
+	err := s.repository.ReadAll(entity.Name, query, &result)
+	if err != nil {
+		return nil, err
+	}
 
 	return result, nil
 }
@@ -229,7 +244,7 @@ func (s *Storage) Delete(entityName, id string) error {
 	return s.repository.Delete(entityName, id)
 }
 
-func (s *Storage) createCollapsedResource(entityName, jsonDocument string) (CollapsedResource, error) {
+func (s *Storage) createCollapsedResourceFromJSON(entityName, jsonDocument string) (CollapsedResource, error) {
 	entity, ok := s.entities[entityName]
 	if !ok {
 		return CollapsedResource{}, UndefinedEntity{entityName}
