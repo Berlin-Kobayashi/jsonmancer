@@ -44,7 +44,11 @@ func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		case ActionReferencedBy:
 			s.getReferencedBy(rw, r, entityName, index)
 		default:
-			s.get(rw, r, entityName, index)
+			if index == "" || index == entityName {
+				s.getAll(rw, r, entityName)
+			} else {
+				s.get(rw, r, entityName, index)
+			}
 		}
 	case http.MethodPost:
 		s.post(rw, r, entityName)
@@ -59,6 +63,24 @@ func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 func (s Service) get(rw http.ResponseWriter, r *http.Request, entityName string, index string) {
 	resource, err := s.Storage.Read(entityName, index)
+	if err != nil {
+		fmt.Println(err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	response, err := json.Marshal(resource)
+	if err != nil {
+		fmt.Println(err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	rw.Write(response)
+}
+
+func (s Service) getAll(rw http.ResponseWriter, r *http.Request, entityName string) {
+	resource, err := s.Storage.ReadAll(entityName, Query{})
 	if err != nil {
 		fmt.Println(err)
 		rw.WriteHeader(http.StatusInternalServerError)
