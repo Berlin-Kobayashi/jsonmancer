@@ -139,7 +139,7 @@ func (s *Storage) Expand(collapsedResource CollapsedResource) (Resource, error) 
 }
 
 func (s *Storage) GetReferencedBy(entityName, id string) (map[string]map[string][]string, error) {
-	referencedBy, err := s.createReferencedByMap(entityName)
+	referencedBy, err := s.entities.CreateReferencedByMap(entityName)
 	if err != nil {
 		return nil, err
 	}
@@ -161,24 +161,6 @@ func (s *Storage) GetReferencedBy(entityName, id string) (map[string]map[string]
 	}
 
 	return referencedBy, nil
-}
-
-func (s *Storage) createReferencedByMap(entityName string) (map[string]map[string][]string, error) {
-	references, ok := s.entities.referencedBy[entityName]
-	if !ok {
-		return nil, UndefinedEntity{entityName}
-	}
-
-	result := make(map[string]map[string][]string, len(references))
-
-	for k, v := range references {
-		result[k] = make(map[string][]string, len(v))
-		for _, relationName := range v {
-			result[k][relationName] = []string{}
-		}
-	}
-
-	return result, nil
 }
 
 // Deletes the resource and all references to it.

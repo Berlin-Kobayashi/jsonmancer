@@ -215,6 +215,8 @@ func (s Service) delete(rw http.ResponseWriter, r *http.Request, entityName stri
 		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
+
+	rw.WriteHeader(http.StatusNoContent)
 }
 
 func (s Service) getAction(r *http.Request) string {

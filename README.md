@@ -8,6 +8,7 @@
  - add unit tests
  - add integration tests
  - support projection
+ - support pagination
  - add meta endpoint for generic clients
  - reduce the amount of DB operations
  - make transactional

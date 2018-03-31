@@ -62,6 +62,24 @@ func getReferencedBy(entities map[string]Entity) (map[string]map[string][]string
 	return referenceBy, nil
 }
 
+func (e *Entities) CreateReferencedByMap(entityName string) (map[string]map[string][]string, error) {
+	references, ok := e.referencedBy[entityName]
+	if !ok {
+		return nil, UndefinedEntity{entityName}
+	}
+
+	result := make(map[string]map[string][]string, len(references))
+
+	for k, v := range references {
+		result[k] = make(map[string][]string, len(v))
+		for _, relationName := range v {
+			result[k][relationName] = []string{}
+		}
+	}
+
+	return result, nil
+}
+
 type Entity struct {
 	Name       string
 	Data       reflect.Type
