@@ -1,69 +1,26 @@
 package storage
 
 import (
-	"fmt"
 	"encoding/json"
 )
 
 type Storage struct {
-	entities     map[string]Entity
-	referencedBy map[string]map[string][]string
+	entities     Entities
 	repository   Repository
 	idGenerator  IDGenerator
 }
 
 func New(entities []Entity, repository Repository, idGenerator IDGenerator) (Storage, error) {
-	entityMap, err := mapEntities(entities)
-	if err != nil {
-		return Storage{}, err
-	}
-
-	referencedBy, err := getReferencedBy(entityMap)
+	validatedEntities, err := NewEntities(entities)
 	if err != nil {
 		return Storage{}, err
 	}
 
 	return Storage{
-		entities:     entityMap,
+		entities:     validatedEntities,
 		repository:   repository,
 		idGenerator:  idGenerator,
-		referencedBy: referencedBy,
 	}, nil
-}
-
-func mapEntities(entityDefinition []Entity) (map[string]Entity, error) {
-	entityMap := make(map[string]Entity, len(entityDefinition))
-	for _, v := range entityDefinition {
-		if _, ok := entityMap[v.Name]; ok {
-			return nil, fmt.Errorf("entitiy name %q i not unique", v.Name)
-		}
-		entityMap[v.Name] = v
-	}
-
-	return entityMap, nil
-}
-
-func getReferencedBy(entities map[string]Entity) (map[string]map[string][]string, error) {
-	referenceBy := make(map[string]map[string][]string, len(entities))
-	for name := range entities {
-		referenceBy[name] = map[string][]string{}
-	}
-
-	for entityName, entity := range entities {
-		for relationName, reference := range entity.References {
-			if _, ok := entities[reference.Name]; !ok {
-				return nil, fmt.Errorf("entitiy %q is referenced but unknown", reference.Name)
-			}
-
-			if _, ok := referenceBy[entityName][reference.Name]; !ok {
-				referenceBy[reference.Name][entityName] = []string{}
-			}
-
-			referenceBy[reference.Name][entityName] = append(referenceBy[reference.Name][entityName], relationName)
-		}
-	}
-
-	return referenceBy, nil
 }
 
 func (s *Storage) CreateFromJSON(entityName, jsonDocument string) (CollapsedResource, error) {
@@ -120,7 +77,7 @@ func (s *Storage) ReadAndExpand(entityName, id string) (Resource, error) {
 }
 
 func (s *Storage) Read(entityName, id string) (CollapsedResource, error) {
-	entity, ok := s.entities[entityName]
+	entity, ok := s.entities.entitiesByName[entityName]
 	if !ok {
 		return CollapsedResource{}, UndefinedEntity{entityName}
 	}
@@ -138,7 +95,7 @@ func (s *Storage) Read(entityName, id string) (CollapsedResource, error) {
 }
 
 func (s *Storage) ReadAll(entityName string, query Query) ([]CollapsedResource, error) {
-	entity, ok := s.entities[entityName]
+	entity, ok := s.entities.entitiesByName[entityName]
 	if !ok {
 		return nil, UndefinedEntity{entityName}
 	}
@@ -207,7 +164,7 @@ func (s *Storage) GetReferencedBy(entityName, id string) (map[string]map[string]
 }
 
 func (s *Storage) createReferencedByMap(entityName string) (map[string]map[string][]string, error) {
-	references, ok := s.referencedBy[entityName]
+	references, ok := s.entities.referencedBy[entityName]
 	if !ok {
 		return nil, UndefinedEntity{entityName}
 	}
@@ -263,7 +220,7 @@ func (s *Storage) Delete(entityName, id string) error {
 }
 
 func (s *Storage) createCollapsedResourceFromJSON(entityName, jsonDocument string) (CollapsedResource, error) {
-	entity, ok := s.entities[entityName]
+	entity, ok := s.entities.entitiesByName[entityName]
 	if !ok {
 		return CollapsedResource{}, UndefinedEntity{entityName}
 	}

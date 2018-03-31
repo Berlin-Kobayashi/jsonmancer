@@ -2,7 +2,65 @@ package storage
 
 import (
 	"reflect"
+	"fmt"
 )
+
+type Entities struct {
+	entitiesByName map[string]Entity
+	referencedBy   map[string]map[string][]string
+}
+
+func NewEntities(entities []Entity) (Entities, error) {
+	entityMap, err := mapEntities(entities)
+	if err != nil {
+		return Entities{}, err
+	}
+
+	referencedBy, err := getReferencedBy(entityMap)
+	if err != nil {
+		return Entities{}, err
+	}
+
+	return Entities{
+		entitiesByName: entityMap,
+		referencedBy:   referencedBy,
+	}, nil
+}
+
+func mapEntities(entityDefinition []Entity) (map[string]Entity, error) {
+	entityMap := make(map[string]Entity, len(entityDefinition))
+	for _, v := range entityDefinition {
+		if _, ok := entityMap[v.Name]; ok {
+			return nil, fmt.Errorf("entitiy name %q i not unique", v.Name)
+		}
+		entityMap[v.Name] = v
+	}
+
+	return entityMap, nil
+}
+
+func getReferencedBy(entities map[string]Entity) (map[string]map[string][]string, error) {
+	referenceBy := make(map[string]map[string][]string, len(entities))
+	for name := range entities {
+		referenceBy[name] = map[string][]string{}
+	}
+
+	for entityName, entity := range entities {
+		for relationName, reference := range entity.References {
+			if _, ok := entities[reference.Name]; !ok {
+				return nil, fmt.Errorf("entitiy %q is referenced but unknown", reference.Name)
+			}
+
+			if _, ok := referenceBy[entityName][reference.Name]; !ok {
+				referenceBy[reference.Name][entityName] = []string{}
+			}
+
+			referenceBy[reference.Name][entityName] = append(referenceBy[reference.Name][entityName], relationName)
+		}
+	}
+
+	return referenceBy, nil
+}
 
 type Entity struct {
 	Name       string

@@ -76,58 +76,14 @@ func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s Service) GetSwaggerFile(rw http.ResponseWriter, r *http.Request) {
-	paths := map[string]interface{}{
-		"/meta/swagger": map[string]interface{}{
-			"get": map[string]interface{}{
-				"responses": map[string]interface{}{
-					"200": map[string]interface{}{
-						"description": "This swagger file",
-					},
-				},
-			},
-		},
-	}
-
-	definitions := map[string]interface{}{}
-
-	for entityName, entity := range s.Storage.entities {
-		paths["/"+entityName] = map[string]interface{}{
-			"get": map[string]interface{}{
-				"responses": map[string]interface{}{
-					"200": map[string]interface{}{
-						"schema": map[string]interface{}{
-							"type": "array",
-							"items": map[string]interface{}{
-								"$ref": "#/definitions/" + entityName,
-							},
-						},
-					},
-				},
-			},
-		}
-
-		definitions[entityName] = entity.New().Collapse()
-	}
-
-	swagger := map[string]interface{}{
-		"swagger": "2.0",
-		"info": map[string]interface{}{
-			"version": s.Info.Version,
-			"title":   s.Info.Title,
-		},
-		"host":  r.Host,
-		"paths": paths,
-		"definitions" : definitions,
-	}
-
-	response, err := json.Marshal(swagger)
+	response, err := CreateSwaggerFile(s.Storage.entities, s.Info, r.Host)
 	if err != nil {
 		fmt.Println(err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	rw.Write(response)
+	rw.Write([]byte(response))
 }
 
 func (s Service) get(rw http.ResponseWriter, r *http.Request, entityName string, index string) {
