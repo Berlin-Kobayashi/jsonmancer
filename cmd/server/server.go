@@ -46,5 +46,5 @@ func build(mongoURL, mongoDB string) (http.Handler, error) {
 		panic(err)
 	}
 
-	return storage.Service{Storage: store}, nil
+	return storage.Service{Storage: store, Info: storage.FixtureInfo}, nil
 }

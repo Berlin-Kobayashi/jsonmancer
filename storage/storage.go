@@ -224,7 +224,6 @@ func (s *Storage) createReferencedByMap(entityName string) (map[string]map[strin
 	return result, nil
 }
 
-// TODO reduce the amount of DB operations
 // Deletes the resource and all references to it.
 func (s *Storage) Purge(entityName, id string) error {
 	referencedBy, err := s.GetReferencedBy(entityName, id)

@@ -59,3 +59,8 @@ var fixtureReferencedData = FixtureDataType{
 var uuidV4Fixture = "b5e57615-0f40-404e-bbe0-6ae81fe8080a"
 
 var missingIDFixture = "123"
+
+var FixtureInfo = Info{
+	Title:    "fixtureService",
+	Version:  "1.0.0",
+}

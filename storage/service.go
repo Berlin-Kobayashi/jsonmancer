@@ -10,6 +10,8 @@ import (
 
 const ActionExpand = "expand"
 const ActionReferencedBy = "referenced-by"
+const Meta = "meta"
+const MetaActionSwaggerFile = "swagger"
 
 var entityNameRegex = regexp.MustCompile("^/([^/]+)/.*$")
 var indexRegex = regexp.MustCompile("^.*/([^/]+)$")
@@ -21,6 +23,11 @@ var pathRegex = regexp.MustCompilePOSIX("^/[^/]+/?[^/]*/?[^/]*$")
 
 type Service struct {
 	Storage Storage
+	Info    Info
+}
+
+type Info struct {
+	Title, Version string
 }
 
 func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -36,29 +43,91 @@ func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	index := s.getIndex(r)
 	action := s.getAction(r)
 
-	switch r.Method {
-	case http.MethodGet:
+	if entityName == Meta {
 		switch action {
-		case ActionExpand:
-			s.expand(rw, r, entityName, index)
-		case ActionReferencedBy:
-			s.getReferencedBy(rw, r, entityName, index)
-		default:
-			if index == "" || index == entityName {
-				s.getAll(rw, r, entityName)
-			} else {
-				s.get(rw, r, entityName, index)
-			}
+		case MetaActionSwaggerFile:
+			s.GetSwaggerFile(rw, r)
 		}
-	case http.MethodPost:
-		s.post(rw, r, entityName)
-	case http.MethodPut:
-		s.put(rw, r, entityName, index)
-	case http.MethodDelete:
-		s.delete(rw, r, entityName, index)
-	default:
-		rw.WriteHeader(http.StatusMethodNotAllowed)
+	} else {
+		switch r.Method {
+		case http.MethodGet:
+			switch action {
+			case ActionExpand:
+				s.expand(rw, r, entityName, index)
+			case ActionReferencedBy:
+				s.getReferencedBy(rw, r, entityName, index)
+			default:
+				if index == "" || index == entityName {
+					s.getAll(rw, r, entityName)
+				} else {
+					s.get(rw, r, entityName, index)
+				}
+			}
+		case http.MethodPost:
+			s.post(rw, r, entityName)
+		case http.MethodPut:
+			s.put(rw, r, entityName, index)
+		case http.MethodDelete:
+			s.delete(rw, r, entityName, index)
+		default:
+			rw.WriteHeader(http.StatusMethodNotAllowed)
+		}
 	}
+}
+
+func (s Service) GetSwaggerFile(rw http.ResponseWriter, r *http.Request) {
+	paths := map[string]interface{}{
+		"/meta/swagger": map[string]interface{}{
+			"get": map[string]interface{}{
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "This swagger file",
+					},
+				},
+			},
+		},
+	}
+
+	definitions := map[string]interface{}{}
+
+	for entityName, entity := range s.Storage.entities {
+		paths["/"+entityName] = map[string]interface{}{
+			"get": map[string]interface{}{
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"schema": map[string]interface{}{
+							"type": "array",
+							"items": map[string]interface{}{
+								"$ref": "#/definitions/" + entityName,
+							},
+						},
+					},
+				},
+			},
+		}
+
+		definitions[entityName] = entity.New().Collapse()
+	}
+
+	swagger := map[string]interface{}{
+		"swagger": "2.0",
+		"info": map[string]interface{}{
+			"version": s.Info.Version,
+			"title":   s.Info.Title,
+		},
+		"host":  r.Host,
+		"paths": paths,
+		"definitions" : definitions,
+	}
+
+	response, err := json.Marshal(swagger)
+	if err != nil {
+		fmt.Println(err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	rw.Write(response)
 }
 
 func (s Service) get(rw http.ResponseWriter, r *http.Request, entityName string, index string) {
