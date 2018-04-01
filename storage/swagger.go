@@ -196,7 +196,7 @@ func CreateSwaggerDefinitionForResource(in Entity) (interface{}, error) {
 			return nil, err
 		}
 
-		references[toLowerFirstLetter(relationName)] = referenceSwagger
+		references[toLowerFirstLetters(relationName)] = referenceSwagger
 	}
 
 	properties := map[string]interface{}{
@@ -249,7 +249,7 @@ func CreateSwaggerDefinition(in interface{}) (interface{}, error) {
 					return nil, fmt.Errorf("struct field %q: %q", fieldName, err.Error())
 				}
 
-				properties[toLowerFirstLetter(fieldName)] = field
+				properties[toLowerFirstLetters(fieldName)] = field
 			}
 		}
 
@@ -267,7 +267,7 @@ func CreateSwaggerDefinition(in interface{}) (interface{}, error) {
 				return nil, fmt.Errorf("map key %q: %q", k.String(), err.Error())
 			}
 
-			properties[toLowerFirstLetter(k.String())] = field
+			properties[toLowerFirstLetters(k.String())] = field
 		}
 
 		return map[string]interface{}{"type": "object", "properties": properties}, nil
@@ -277,16 +277,23 @@ func CreateSwaggerDefinition(in interface{}) (interface{}, error) {
 }
 
 func startsWithCapitalLetter(s string) bool {
-	return s != toLowerFirstLetter(s)
+	return s != toLowerFirstLetters(s)
 }
 
-func toLowerFirstLetter(in string) string {
+func toLowerFirstLetters(in string) string {
 	if in == "" {
 		return in
 	}
 
 	out := []byte(in)
-	out[0] = bytes.ToLower([]byte{out[0]})[0]
+	for i := range out {
+		lowerCased := bytes.ToLower([]byte{out[i]})[0]
+		if out[i] == lowerCased {
+			break
+		}
+
+		out[i] = lowerCased
+	}
 
 	return string(out)
 }
