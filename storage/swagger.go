@@ -24,22 +24,6 @@ func CreateSwaggerFile(entities Entities, info Info, host string) (string, error
 	definitions := map[string]interface{}{}
 
 	for entityName, entity := range entities.entitiesByName {
-		paths["/"+entityName] = map[string]interface{}{
-			"get": map[string]interface{}{
-				"responses": map[string]interface{}{
-					"200": map[string]interface{}{
-						"description": "All matching " + entityName,
-						"schema": map[string]interface{}{
-							"type": "array",
-							"items": map[string]interface{}{
-								"$ref": "#/definitions/" + entityName,
-							},
-						},
-					},
-				},
-			},
-		}
-
 		schemaReference := map[string]interface{}{
 			"$ref": "#/definitions/" + entityName,
 		}
@@ -61,15 +45,17 @@ func CreateSwaggerFile(entities Entities, info Info, host string) (string, error
 			"schema":      schemaReference,
 		}
 
-		paths["/"+entityName+"/{"+pathParameterName+"}"] = map[string]interface{}{
-			"parameters": []interface{}{
-				pathParameter,
-			},
+		paths["/"+entityName] = map[string]interface{}{
 			"get": map[string]interface{}{
 				"responses": map[string]interface{}{
 					"200": map[string]interface{}{
-						"description": "A single " + entityName,
-						"schema":      schemaReference,
+						"description": "All matching " + entityName,
+						"schema": map[string]interface{}{
+							"type": "array",
+							"items": map[string]interface{}{
+								"$ref": "#/definitions/" + entityName,
+							},
+						},
 					},
 				},
 			},
@@ -80,6 +66,20 @@ func CreateSwaggerFile(entities Entities, info Info, host string) (string, error
 				"responses": map[string]interface{}{
 					"200": map[string]interface{}{
 						"description": "The created " + entityName,
+						"schema":      schemaReference,
+					},
+				},
+			},
+		}
+
+		paths["/"+entityName+"/{"+pathParameterName+"}"] = map[string]interface{}{
+			"parameters": []interface{}{
+				pathParameter,
+			},
+			"get": map[string]interface{}{
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "A single " + entityName,
 						"schema":      schemaReference,
 					},
 				},
