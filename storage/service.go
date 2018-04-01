@@ -31,7 +31,13 @@ type Info struct {
 }
 
 func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Add("Content-Type", "application/json")
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	rw.Header().Set("Access-Control-Allow-Headers", "*")
+	rw.Header().Set("Content-Type", "application/json")
+
+	if r.Method == http.MethodOptions {
+		return
+	}
 
 	entityName := s.getEntityName(r)
 
