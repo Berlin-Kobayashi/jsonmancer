@@ -98,16 +98,16 @@ func (e Entity) New() Resource {
 }
 
 type Resource struct {
-	ID         string
-	Data       interface{}
-	References map[string][]Resource
+	ID         string                `json:"id"`
+	Data       interface{}           `json:"data"`
+	References map[string][]Resource `json:"references"`
 	entity     Entity
 }
 
 type CollapsedResource struct {
-	ID         string `bson:"_id"`
-	Data       interface{}
-	References map[string][]string
+	ID         string              `bson:"_id",json:"id"`
+	Data       interface{}         `json:"data"`
+	References map[string][]string `json:"references"`
 	entity     Entity
 }
 
