@@ -73,16 +73,7 @@ func (s Repository) ReadAll(collectionName string, query storage.Query, result i
 	mq := createMongoQuery(query)
 	q := s.database.C(collectionName).Find(mq)
 
-	n, err := q.Count()
-	if err != nil {
-		return storage.DBError{Message: err.Error()}
-	}
-
-	if n == 0 {
-		return storage.NoMatch{Entity:collectionName,Query:query}
-	}
-
-	err = q.All(result)
+	err := q.All(result)
 	if err != nil {
 		return storage.DBError{Message: err.Error()}
 	}

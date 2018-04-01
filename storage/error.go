@@ -18,15 +18,6 @@ func (e NotFound) Error() string {
 	return fmt.Sprintf("%q not found in %q", e.ID, e.Entity)
 }
 
-type NoMatch struct {
-	Entity string
-	Query  Query
-}
-
-func (e NoMatch) Error() string {
-	return fmt.Sprintf("%q has no match for %+v", e.Entity, e.Query)
-}
-
 type UndefinedEntity struct {
 	Entity string
 }
