@@ -13,3 +13,4 @@
  - reduce the amount of DB operations
  - make transactional
  - authorisation
+ - aggregation

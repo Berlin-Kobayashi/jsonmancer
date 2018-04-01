@@ -87,15 +87,12 @@ type Entity struct {
 }
 
 func (e Entity) New() Resource {
+	data := reflect.New(e.Data).Interface()
+
 	references := make(map[string][]Resource, len(e.References))
 	for k := range e.References {
-		if v, ok := references[k]; ok {
-			references[k] = v
-		} else {
-			references[k] = []Resource{}
-		}
+		references[k] = []Resource{}
 	}
-	data := reflect.New(e.Data).Interface()
 
 	return Resource{Data: data, References: references, entity: e}
 }
