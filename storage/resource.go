@@ -105,7 +105,7 @@ type Resource struct {
 }
 
 type CollapsedResource struct {
-	ID         string              `bson:"_id",json:"id"`
+	ID         string              `bson:"_id" json:"id"`
 	Data       interface{}         `json:"data"`
 	References map[string][]string `json:"references"`
 	entity     Entity
