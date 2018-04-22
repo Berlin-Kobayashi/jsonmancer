@@ -31,7 +31,9 @@ type Info struct {
 }
 
 func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	rw.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
 	rw.Header().Set("Access-Control-Allow-Headers", "*")
 	rw.Header().Set("Content-Type", "application/json")
 
