@@ -34,7 +34,7 @@ func (s Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	rw.Header().Set("Access-Control-Allow-Headers", "*")
+	rw.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, User-Agent")
 	rw.Header().Set("Content-Type", "application/json")
 
 	if r.Method == http.MethodOptions {
